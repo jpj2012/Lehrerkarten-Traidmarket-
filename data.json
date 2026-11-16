@@ -24,7 +24,7 @@
    "who": "Tobias Dox",
    "type": "money",
    "val": 0.6,
-   "sDone": true,
+   "sDone": false,
    "rDone": false
   }
  ]
