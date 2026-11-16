@@ -1,4 +1,16 @@
 {
- "cards": [],
+ "cards": [
+  {
+   "nr": "033",
+   "name": "Saskia Busse",
+   "seller": "Justus Jülkenbeck",
+   "edition": "normal",
+   "qty": 2,
+   "mode": "money",
+   "wants": [],
+   "id": "mwjqoobi3kbh",
+   "bids": []
+  }
+ ],
  "deals": []
 }
