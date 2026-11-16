@@ -14,18 +14,5 @@
    "bids": []
   }
  ],
- "deals": [
-  {
-   "id": "mwjq17k2okz",
-   "ts": 1794861228674,
-   "nr": "015",
-   "name": "Sonya Mc Laren",
-   "seller": "Justus Jülkenbeck",
-   "who": "Tobias Dox",
-   "type": "money",
-   "val": 0.6,
-   "sDone": false,
-   "rDone": false
-  }
- ]
+ "deals": []
 }
