@@ -25,7 +25,7 @@
    "type": "money",
    "val": 0.6,
    "sDone": true,
-   "rDone": false
+   "rDone": true
   }
  ]
 }
