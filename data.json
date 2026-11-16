@@ -10,6 +10,19 @@
    "wants": [],
    "id": "mwjqoobi3kbh",
    "bids": []
+  },
+  {
+   "nr": "033",
+   "name": "Saskia Busse",
+   "seller": "Tobias Dox",
+   "edition": "special",
+   "qty": 1,
+   "mode": "both",
+   "wants": [
+    "Sebastian Kraft"
+   ],
+   "id": "mwjqq0bdzgz9",
+   "bids": []
   }
  ],
  "deals": []
