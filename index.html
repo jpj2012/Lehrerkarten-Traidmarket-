@@ -39,7 +39,7 @@ button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(
 <div id="ov" onclick="if(event.target===this)closeM()"><div id="md"></div></div>
 <script>
 // ===== Einstellungen =====
-const CFG={owner:'jpj2012',repo:'lehrerkarten',branch:'main',file:'data.json',bidToken:'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'}; // owner leer = Testmodus (nur Browser)
+const CFG={owner:'jpj2012',repo:'lehrerkarten',branch:'main',file:'data.json',bidToken:''}; // owner leer = Testmodus (nur Browser)
 const CODE='ghg787tjc1215';
 const START={normal:0.60,special:0.80};
 const MODE={money:'Nur Geld',cards:'Nur Tausch',both:'Geld oder Tausch'};
@@ -55,7 +55,8 @@ const dec=b=>new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\n/g,'')),
 const enc=s=>{let b='';new TextEncoder().encode(s).forEach(c=>b+=String.fromCharCode(c));return btoa(b)};
 
 async function fetchRemote(){
-  const r=await fetch(api()+'?ref='+CFG.branch+'&t='+Date.now(),{headers:hdr()});
+  let r=await fetch(api()+'?ref='+CFG.branch+'&t='+Date.now(),{headers:hdr()});
+  if(r.status===401){localStorage.removeItem('lk_token');r=await fetch(api()+'?ref='+CFG.branch+'&t='+Date.now(),{headers:{Accept:'application/vnd.github+json'}})}
   if(r.status===404)return{data:{cards:[]},sha:null};
   if(!r.ok)throw new Error('GitHub '+r.status);
   const j=await r.json();return{data:JSON.parse(dec(j.content)),sha:j.sha};
@@ -70,12 +71,13 @@ async function load(){
 async function mutate(fn,tries=2){
   try{
     if(!remote()){const d=JSON.parse(localStorage.getItem('lk_db')||'{"cards":[]}');fn(d);localStorage.setItem('lk_db',JSON.stringify(d));db=d;render();return true}
-    if(!tok()){alert('Kein GitHub-Token hinterlegt.');return false}
+    if(!tok()){alert('Kein gültiges GitHub-Token hinterlegt. Bitte neu einloggen.');return false}
     const {data,sha}=await fetchRemote();fn(data);
     const body={message:'Update '+new Date().toISOString(),content:enc(JSON.stringify(data,null,1)),branch:CFG.branch};
     if(sha)body.sha=sha;
     const r=await fetch(api(),{method:'PUT',headers:hdr(),body:JSON.stringify(body)});
     if(r.status===409&&tries>0)return mutate(fn,tries-1);
+    if(r.status===401){localStorage.removeItem('lk_token');throw new Error('Token ungültig (401). Bitte Admin-Login wiederholen und ein neues Token eingeben.')}
     if(!r.ok)throw new Error('Speichern fehlgeschlagen ('+r.status+')');
     db=data;render();return true;
   }catch(e){alert(e.message);return false}
