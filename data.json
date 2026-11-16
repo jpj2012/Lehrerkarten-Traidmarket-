@@ -12,7 +12,13 @@
     "Sebastian Kraft"
    ],
    "id": "mwjbfvzxm6yb",
-   "bids": []
+   "bids": [
+    {
+     "name": "Justus Jülkenbeck",
+     "price": 1,
+     "ts": 1794836774876
+    }
+   ]
   }
  ]
 }
