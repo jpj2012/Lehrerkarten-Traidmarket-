@@ -1,29 +1,3 @@
 {
- "cards": [
-  {
-   "nr": "033",
-   "name": "Saskia Busse",
-   "seller": "Justus Jülkenbeck",
-   "edition": "special",
-   "qty": 1,
-   "mode": "both",
-   "wants": [
-    "Christopher Janus",
-    "Sebastian Kraft"
-   ],
-   "id": "mwjbfvzxm6yb",
-   "bids": [
-    {
-     "name": "Justus Jülkenbeck",
-     "price": 1,
-     "ts": 1794836774876
-    },
-    {
-     "name": "Justus Jülkenbeck",
-     "price": 1,
-     "ts": 1794836794642
-    }
-   ]
-  }
- ]
+ "cards": []
 }
