@@ -22,11 +22,11 @@ button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(
 #ov{position:fixed;inset:0;background:#0007;display:none;align-items:center;justify-content:center;padding:12px}
 #md{background:var(--bg);border-radius:12px;max-width:520px;width:100%;max-height:90vh;overflow:auto;padding:16px}
 .bid{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--br)}
-#plus{display:none;width:100%;margin-bottom:10px}
+body.adm{padding-top:46px}.dl{background:var(--card);border:1px solid var(--br);border-radius:10px;padding:10px 12px;margin-bottom:8px}.dl label{display:flex;gap:8px;align-items:center;margin-top:4px}.dl input{width:auto;margin:0}h2.sec{font-size:1.1rem;margin:16px 0 8px}#plus{display:none;width:100%;margin-bottom:10px}
 </style>
 </head>
 <body>
-<div id="bar"><span>Admin-Modus</span><button onclick="logout()">Beenden</button></div>
+<div id="bar"><span>Admin: <button onclick="setView('cards')">Karten</button> <button onclick="setView('deals')">Übergaben</button></span><button onclick="logout()">Beenden</button></div>
 <h1>🃏 Lehrerkarten Tauschbörse</h1>
 <button id="plus" class="p" onclick="openForm()">＋ Karte eintragen</button>
 <div id="sf">
@@ -43,7 +43,7 @@ const CFG={owner:'jpj2012',repo:'Lehrerkarten-Traidmarket-',branch:'main',file:'
 const CODE='ghg787tjc1215';
 const START={normal:0.60,special:0.80};
 const MODE={money:'Nur Geld',cards:'Nur Tausch',both:'Geld oder Tausch'};
-let db={cards:[]},admin=false;
+let db={cards:[]},admin=false,view='cards';
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const eur=n=>Number(n).toFixed(2).replace('.',',')+' €';
@@ -84,6 +84,8 @@ async function mutate(fn,tries=2){
 }
 
 function render(){
+  const dv=admin&&view==='deals';$('sf').style.display=dv?'none':'';$('plus').style.display=(admin&&!dv)?'block':'none';
+  if(dv)return renderDeals();
   const n=$('qn').value.trim().toLowerCase(),m=$('qm').value.trim().toLowerCase(),w=$('qw').value.trim().toLowerCase();
   const cs=db.cards.filter(c=>(!n||String(c.nr).toLowerCase().includes(n))
     &&(!m||String(c.name).toLowerCase().includes(m))
@@ -111,7 +113,7 @@ function detail(id){
     <button class="p" onclick="bidForm('${id}')">Bieten</button>`;
     if(admin)h+=`<h3>Gebote</h3>`+(bids.length?bids.map((b,i)=>`<div class="bid"><span>${esc(b.name)} – <b>${eur(b.price)}</b></span><button onclick="sell('${id}',${(c.bids||[]).indexOf(b)})">Zuschlag</button></div>`).join(''):'<p class="mut">Keine Gebote</p>');
   }
-  if(admin)h+=`<h3>Admin</h3><button onclick="swap('${id}')">Tausch erfolgt (−1)</button> <button onclick="openForm('${id}')">Bearbeiten</button> <button onclick="del('${id}')">Löschen</button>`;
+  if(admin)h+=`<h3>Admin</h3><button onclick="swap('${id}')">Trade durchführen</button> <button onclick="openForm('${id}')">Bearbeiten</button> <button onclick="del('${id}')">Löschen</button>`;
   h+=`<p><button onclick="closeM()">Schließen</button></p>`;
   openM(h);
 }
@@ -127,14 +129,49 @@ async function bid(id){
   if(!(price>=START[c.edition]))return alert('Mindestens '+eur(START[c.edition]));
   if(await mutate(d=>{const x=d.cards.find(k=>k.id===id);if(x)(x.bids=x.bids||[]).push({name,price,ts:Date.now()})}))detail(id);
 }
-function sell(id,i){
-  const b=find(id).bids[i];
-  if(!confirm(`Karte an ${b.name} für ${eur(b.price)} geben?`))return;
-  mutate(d=>{const x=d.cards.find(k=>k.id===id);x.bids.splice(i,1);x.qty--;if(x.qty<=0)d.cards=d.cards.filter(k=>k.id!==id)}).then(()=>closeM());
+function sell(id,i){tradeForm(id,i)}
+function swap(id){tradeForm(id,-1)}
+function tradeForm(id,i){
+  const c=find(id),b=i>=0?c.bids[i]:null;
+  const types=(c.mode==='cards'?'':'<option value="money">Geld</option>')+(c.mode==='money'?'':'<option value="card">Karte</option>');
+  openM(`<h3>Trade: #${esc(c.nr)} ${esc(c.name)}</h3>
+  <p class="mut">Verkäufer: ${esc(c.seller)}</p>
+  <input id="tw" list="tl" placeholder="Wer erhält die Karte?" value="${esc(b?b.name:'')}">
+  <datalist id="tl">${[...new Set((c.bids||[]).map(x=>x.name))].map(n=>`<option value="${esc(n)}">`).join('')}</datalist>
+  <p class="mut">Was bekommt der Verkäufer dafür?</p>
+  <select id="tt" onchange="$('tv').placeholder=this.value==='money'?'Betrag in €':'Erhaltene Karte (Nr. + Name)'">${types}</select>
+  <input id="tv" placeholder="${c.mode==='cards'?'Erhaltene Karte (Nr. + Name)':'Betrag in €'}" value="${b?b.price:(c.mode==='cards'?'':START[c.edition])}">
+  <button class="p" onclick="doTrade('${id}',${i})">Trade abschließen</button> <button onclick="detail('${id}')">Zurück</button>`);
 }
-function swap(id){
-  if(!confirm('Eine Karte als getauscht austragen?'))return;
-  mutate(d=>{const x=d.cards.find(k=>k.id===id);x.qty--;if(x.qty<=0)d.cards=d.cards.filter(k=>k.id!==id)}).then(()=>closeM());
+function doTrade(id,i){
+  const who=$('tw').value.trim(),type=$('tt').value;let val=$('tv').value.trim();
+  if(!who||!val)return alert('Bitte Empfänger und Gegenleistung eingeben.');
+  if(type==='money'){val=Math.round(parseFloat(val.replace(',','.'))*100)/100;if(!(val>0))return alert('Ungültiger Betrag.')}
+  mutate(d=>{
+    const x=d.cards.find(k=>k.id===id);if(!x)return;
+    (d.deals=d.deals||[]).push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),ts:Date.now(),nr:x.nr,name:x.name,seller:x.seller||'(unbekannt)',who,type,val,sDone:false,rDone:false});
+    if(i>=0&&x.bids)x.bids.splice(i,1);
+    x.qty--;if(x.qty<=0)d.cards=d.cards.filter(k=>k.id!==id);
+  }).then(ok=>ok&&closeM());
+}
+function setView(v){view=v;render()}
+function toggleDeal(id,f){mutate(d=>{const x=(d.deals||[]).find(k=>k.id===id);if(x)x[f]=!x[f]})}
+function delDeal(id){if(confirm('Eintrag löschen?'))mutate(d=>{d.deals=(d.deals||[]).filter(k=>k.id!==id)})}
+function renderDeals(){
+  const ds=(db.deals||[]).slice().sort((a,b)=>b.ts-a.ts);
+  if(!ds.length){$('list').innerHTML='<p class="mut">Noch keine Trades.</p>';return}
+  const grp=k=>ds.reduce((m,d)=>((m[d[k]]=m[d[k]]||[]).push(d),m),{});
+  const pay=d=>d.type==='money'?eur(d.val):'Karte: '+esc(d.val);
+  let h='<h2 class="sec">Verkäufer bekommen</h2>';
+  for(const [n,l] of Object.entries(grp('seller'))){
+    const open=l.filter(d=>!d.sDone&&d.type==='money').reduce((a,d)=>a+d.val,0);
+    h+=`<div class="dl"><b>${esc(n)}</b>${open?` <span class="tag">noch offen: ${eur(open)}</span>`:''}`+
+      l.map(d=>`<label><input type="checkbox" ${d.sDone?'checked':''} onchange="toggleDeal('${d.id}','sDone')"><span>#${esc(d.nr)} ${esc(d.name)} → ${esc(d.who)} · bekommt <b>${pay(d)}</b></span></label>`).join('')+'</div>';
+  }
+  h+='<h2 class="sec">Empfänger bekommen</h2>';
+  for(const [n,l] of Object.entries(grp('who')))
+    h+=`<div class="dl"><b>${esc(n)}</b>`+l.map(d=>`<label><input type="checkbox" ${d.rDone?'checked':''} onchange="toggleDeal('${d.id}','rDone')"><span>#${esc(d.nr)} ${esc(d.name)}</span><button onclick="delDeal('${d.id}')" style="margin-left:auto;padding:0 6px">✕</button></label>`).join('')+'</div>';
+  $('list').innerHTML=h;
 }
 function del(id){if(confirm('Eintrag komplett löschen?'))mutate(d=>{d.cards=d.cards.filter(k=>k.id!==id)}).then(()=>closeM())}
 
@@ -168,9 +205,9 @@ function login(){
     const t=prompt('GitHub-Token (einmalig, wird nur in diesem Browser gespeichert):');
     if(t)localStorage.setItem('lk_token',t.trim());
   }
-  admin=true;$('plus').style.display='block';$('bar').style.display='flex';render();
+  admin=true;document.body.classList.add('adm');$('bar').style.display='flex';render();
 }
-function logout(){admin=false;$('plus').style.display='none';$('bar').style.display='none';closeM()}
+function logout(){admin=false;view='cards';document.body.classList.remove('adm');$('bar').style.display='none';closeM();render()}
 load();
 </script>
 </body>
