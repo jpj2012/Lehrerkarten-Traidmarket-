@@ -1,19 +1,6 @@
 {
  "cards": [],
- "deals": [
-  {
-   "id": "mwkfgtv6rzt",
-   "ts": 1794903947826,
-   "nr": "033",
-   "name": "Saskia Busse",
-   "seller": "Tobias Dox",
-   "who": "G",
-   "type": "money",
-   "val": 0.8,
-   "sDone": false,
-   "rDone": false
-  }
- ],
+ "deals": [],
  "known": [
   {
    "nr": "001",
