@@ -1,10 +1,27 @@
 {
- "cards": [],
+ "cards": [
+  {
+   "nr": "045",
+   "name": "Katrin Riemer",
+   "seller": "JPJ2012",
+   "edition": "normal",
+   "qty": 1,
+   "mode": "money",
+   "wants": [],
+   "ownerId": "mwklkdsu0qaf",
+   "id": "mwklmjkqukt9",
+   "bids": []
+  }
+ ],
  "deals": [],
  "known": [
   {
    "nr": "001",
    "name": "Michael Rembiak"
+  },
+  {
+   "nr": "045",
+   "name": "Katrin Riemer"
   }
  ],
  "users": [
