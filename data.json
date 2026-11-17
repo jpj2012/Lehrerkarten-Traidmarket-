@@ -1,19 +1,6 @@
 {
  "cards": [],
- "deals": [
-  {
-   "id": "mwklppakgn4",
-   "ts": 1794914439500,
-   "nr": "045",
-   "name": "Katrin Riemer",
-   "seller": "JPJ2012",
-   "who": "Felix Korte",
-   "type": "money",
-   "val": 0.6,
-   "sDone": false,
-   "rDone": false
-  }
- ],
+ "deals": [],
  "known": [
   {
    "nr": "001",
