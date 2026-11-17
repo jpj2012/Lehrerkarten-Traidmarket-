@@ -5,7 +5,7 @@
    "name": "Saskia Busse",
    "seller": "Justus Jülkenbeck",
    "edition": "normal",
-   "qty": 2,
+   "qty": 1,
    "mode": "money",
    "wants": [],
    "id": "mwjqoobi3kbh",
@@ -33,6 +33,18 @@
    "who": "G",
    "type": "money",
    "val": 0.8,
+   "sDone": false,
+   "rDone": false
+  },
+  {
+   "id": "mwkfgzb6fsb",
+   "ts": 1794903954882,
+   "nr": "033",
+   "name": "Saskia Busse",
+   "seller": "Justus Jülkenbeck",
+   "who": "V",
+   "type": "money",
+   "val": 0.6,
    "sDone": false,
    "rDone": false
   }
