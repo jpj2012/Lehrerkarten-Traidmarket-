@@ -135,24 +135,23 @@ function detailGroup(encodedKey){
   let h=`<h2>${esc(offers[0].name)}</h2>
     <p class="mut">${offers.length} einzelne Angebote zu dieser Karte. Jedes Angebot hat eigene Nummer, Edition, Gebote und Tauschwünsche.</p>
     <div class="table-wrap"><table class="offer-table"><thead><tr>
-    <th>Nummer</th><th>Name</th><th>Edition</th><th>Preis</th><th>Höchstpreis</th><th>Tauschkarten</th><th>Aktion</th>
+    <th>Nummer</th><th>Name</th><th>Edition</th><th>Preis</th><th>Höchstpreis</th><th>Tausch gegen</th><th>Aktion</th>
     </tr></thead><tbody>`;
   for(const c of offers){
     const bids=[...(c.bids||[])].sort((a,b)=>b.price-a.price);
     const start=START[c.edition]??START.normal;
-    const highest=bids.length?eur(bids[0].price):'—';
-    const wants=(c.wants||[]).length?c.wants.map(esc).join('<br>'):'—';
+    const hasMoney=c.mode!=='cards',hasSwap=c.mode!=='money';
+    const highest=hasMoney&&bids.length?eur(bids[0].price):'—';
+    const wants=hasSwap?((c.wants||[]).length?c.wants.map(esc).join('<br>'):'Keine Angabe'):'—';
     const edition=c.edition==='special'?'Special':'Normal';
-    const price=c.mode==='cards'?'Nur Tausch':eur(start);
+    const price=hasMoney?eur(start):'—';
     let action='';
     if(c.mode==='money'||c.mode==='both')action+=`<button class="p" onclick="bidForm('${c.id}')">Bieten</button>`;
-    if(c.mode==='cards')action+='<span class="mut">Nur Tausch</span>';
     if(admin)action+=`<button onclick="detail('${c.id}')">Gebote</button> <button onclick="tradeForm('${c.id}',-1)">Trade</button> <button onclick="openForm('${c.id}')">Bearbeiten</button>`;
     h+=`<tr><td>#${esc(c.nr)}</td><td>${esc(c.name)}</td><td>${edition}</td><td>${price}</td><td>${highest}</td><td>${wants}</td><td><div class="offer-actions">${action}</div></td></tr>`;
   }
   h+=`</tbody></table></div>`;
-  h+=`<p class="mut">Bei „Nur Tausch“ ist kein Geldgebot möglich. Diese Angebote können ausschließlich über einen Kartentausch abgewickelt werden.</p>
-    <p><button onclick="closeM()">Schließen</button></p>`;
+  h+=`<p><button onclick="closeM()">Schließen</button></p>`;
   openM(h);
 }
 function detail(id){
