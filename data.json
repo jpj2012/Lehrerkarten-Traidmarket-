@@ -1,5 +1,17 @@
 {
- "cards": [],
+ "cards": [
+  {
+   "nr": "001",
+   "name": "Michael Rembiak",
+   "seller": "Felix Korte",
+   "edition": "special",
+   "qty": 1,
+   "mode": "money",
+   "wants": [],
+   "id": "mwkfiegoyv68",
+   "bids": []
+  }
+ ],
  "deals": [
   {
    "id": "mwkfgtv6rzt",
