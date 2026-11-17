@@ -14,7 +14,7 @@ input,select,textarea,button{font:inherit;color:inherit;background:var(--card);b
 input,select,textarea{width:100%;margin-bottom:8px}
 button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
 .row{display:flex;gap:10px;align-items:center;background:var(--card);border:1px solid var(--br);border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer}
-.nr{font-weight:700;min-width:48px}.nm{flex:1}.tag{font-size:.75rem;border:1px solid var(--br);border-radius:99px;padding:2px 8px;color:var(--mut)}
+.nr{font-weight:700;min-width:64px;color:var(--ac)}.nm{flex:1}.tag{font-size:.75rem;border:1px solid var(--br);border-radius:99px;padding:2px 8px;color:var(--mut)}
 .tag.s{color:var(--sp);border-color:var(--sp)}.mut{color:var(--mut);font-size:.9rem}
 #dot{position:fixed;right:6px;bottom:6px;width:18px;height:18px;padding:0;border-radius:50%;opacity:.3}#sf{display:grid;gap:0 8px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
 #bar{position:fixed;left:0;right:0;top:0;background:var(--ok);color:#fff;padding:6px 12px;font-size:.9rem;display:none;justify-content:space-between}
@@ -105,13 +105,16 @@ function render(){
   const filtered=db.cards.filter(c=>(!n||String(c.nr).toLowerCase().includes(n))
     &&(!m||String(c.name).toLowerCase().includes(m))
     &&(!w||(c.wants||[]).some(x=>x.toLowerCase().includes(w))));
-  const groups=cardGroups(filtered).sort((a,b)=>String(a.offers[0].name).localeCompare(String(b.offers[0].name),'de'));
+  const groups=cardGroups(filtered).map(g=>({...g,min:Math.min(...g.offers.map(c=>parseInt(c.nr,10)||1e9))}))
+    .sort((x,y)=>x.min-y.min||String(x.offers[0].name).localeCompare(String(y.offers[0].name),'de'));
   $('list').innerHTML=groups.length?groups.map(g=>{
     const editions=[...new Set(g.offers.map(c=>c.edition==='special'?'Special':'Normal'))];
     const editionLabel=editions.length===2?'Normal & Special':editions[0];
     const qty=g.offers.reduce((sum,c)=>sum+(Number(c.qty)||0),0);
     const modes=[...new Set(g.offers.map(c=>c.mode))];
+    const nrs=[...new Set(g.offers.map(c=>String(c.nr)))].sort((p,q)=>p.localeCompare(q,'de',{numeric:true})).map(x=>'#'+esc(x)).join(', ');
     return `<div class="row" onclick="detailGroup('${encodeURIComponent(g.key)}')">
+      <span class="nr">${nrs}</span>
       <span class="nm"><b>${esc(g.offers[0].name)}</b></span>
       <span class="tag">${esc(editionLabel)}</span>
       <span class="tag">${g.offers.length} Angebot${g.offers.length===1?'':'e'}</span>
@@ -122,6 +125,7 @@ function render(){
 function openM(h){$('md').innerHTML=h;$('ov').style.display='flex'}
 function closeM(){$('ov').style.display='none'}
 const find=id=>db.cards.find(c=>c.id===id);
+const gkey=c=>encodeURIComponent(String(c.name||'').trim().toLocaleLowerCase('de'));
 
 function detailGroup(encodedKey){
   const key=decodeURIComponent(encodedKey);
@@ -143,7 +147,7 @@ function detailGroup(encodedKey){
     let action='';
     if(c.mode==='money'||c.mode==='both')action+=`<button class="p" onclick="bidForm('${c.id}')">Bieten</button>`;
     if(c.mode==='cards')action+='<span class="mut">Nur Tausch</span>';
-    if(admin)action+=`<button onclick="tradeForm('${c.id}',-1)">Trade</button> <button onclick="openForm('${c.id}')">Bearbeiten</button>`;
+    if(admin)action+=`<button onclick="detail('${c.id}')">Gebote</button> <button onclick="tradeForm('${c.id}',-1)">Trade</button> <button onclick="openForm('${c.id}')">Bearbeiten</button>`;
     h+=`<tr><td>#${esc(c.nr)}</td><td>${esc(c.name)}</td><td>${edition}</td><td>${price}</td><td>${highest}</td><td>${wants}</td><td><div class="offer-actions">${action}</div></td></tr>`;
   }
   h+=`</tbody></table></div>`;
@@ -172,13 +176,15 @@ function bidForm(id){
   const c=find(id);
   openM(`<h3>Gebot für #${esc(c.nr)} ${esc(c.name)}</h3>
   <input id="bn" placeholder="Dein Name"><input id="bp" type="number" step="0.05" min="${START[c.edition]}" value="${START[c.edition]}">
-  <button class="p" onclick="bid('${id}')">Gebot abgeben</button> <button onclick="detail('${id}')">Zurück</button>`);
+  <button class="p" onclick="bid('${id}')">Gebot abgeben</button> <button onclick="detailGroup('${gkey(c)}')">Zurück</button>`);
 }
 async function bid(id){
   const name=$('bn').value.trim(),price=Math.round(parseFloat($('bp').value)*100)/100,c=find(id);
   if(!name)return alert('Bitte Namen eingeben.');
+  if(c.mode==='cards')return alert('Auf dieses Angebot kann nicht geboten werden (nur Tausch).');
   if(!(price>=START[c.edition]))return alert('Mindestens '+eur(START[c.edition]));
-  if(await mutate(d=>{const x=d.cards.find(k=>k.id===id);if(x)(x.bids=x.bids||[]).push({name,price,ts:Date.now()})}))detail(id);
+  const k=gkey(c);
+  if(await mutate(d=>{const x=d.cards.find(k=>k.id===id);if(x)(x.bids=x.bids||[]).push({name,price,ts:Date.now()})}))detailGroup(k);
 }
 function sell(id,i){tradeForm(id,i)}
 function swap(id){tradeForm(id,-1)}
