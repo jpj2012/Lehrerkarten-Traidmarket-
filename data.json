@@ -1,28 +1,5 @@
 {
- "cards": [
-  {
-   "nr": "001",
-   "name": "Michael Rembiak",
-   "seller": "Felix Korte",
-   "edition": "special",
-   "qty": 1,
-   "mode": "money",
-   "wants": [],
-   "id": "mwkfiegoyv68",
-   "bids": [
-    {
-     "name": "Justus Jülkenbeck",
-     "price": 1,
-     "ts": 1794904042919
-    },
-    {
-     "name": "Tobias Dox",
-     "price": 1.5,
-     "ts": 1794904056981
-    }
-   ]
-  }
- ],
+ "cards": [],
  "deals": [
   {
    "id": "mwkfgtv6rzt",
@@ -57,6 +34,18 @@
    "who": "V",
    "type": "money",
    "val": 0.6,
+   "sDone": false,
+   "rDone": false
+  },
+  {
+   "id": "mwkfjv33g2j",
+   "ts": 1794904089375,
+   "nr": "001",
+   "name": "Michael Rembiak",
+   "seller": "Felix Korte",
+   "who": "Tobias Dox",
+   "type": "money",
+   "val": 1.5,
    "sDone": false,
    "rDone": false
   }
