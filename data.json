@@ -36,18 +36,6 @@
    "val": 0.6,
    "sDone": false,
    "rDone": false
-  },
-  {
-   "id": "mwkfjv33g2j",
-   "ts": 1794904089375,
-   "nr": "001",
-   "name": "Michael Rembiak",
-   "seller": "Felix Korte",
-   "who": "Tobias Dox",
-   "type": "money",
-   "val": 1.5,
-   "sDone": false,
-   "rDone": false
   }
  ],
  "known": [
