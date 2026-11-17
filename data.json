@@ -29,7 +29,24 @@
      "ts": 1794901883855
     }
    ]
+  },
+  {
+   "nr": "001",
+   "name": "Michael Rembiak",
+   "seller": "Justus Jülkenbeck",
+   "edition": "normal",
+   "qty": 1,
+   "mode": "money",
+   "wants": [],
+   "id": "mwkfg8dp63e3",
+   "bids": []
   }
  ],
- "deals": []
+ "deals": [],
+ "known": [
+  {
+   "nr": "001",
+   "name": "Michael Rembiak"
+  }
+ ]
 }
