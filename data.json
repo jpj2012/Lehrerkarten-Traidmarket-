@@ -1,19 +1,19 @@
 {
- "cards": [
+ "cards": [],
+ "deals": [
   {
+   "id": "mwklppakgn4",
+   "ts": 1794914439500,
    "nr": "045",
    "name": "Katrin Riemer",
    "seller": "JPJ2012",
-   "edition": "normal",
-   "qty": 1,
-   "mode": "money",
-   "wants": [],
-   "ownerId": "mwklkdsu0qaf",
-   "id": "mwklmjkqukt9",
-   "bids": []
+   "who": "Felix Korte",
+   "type": "money",
+   "val": 0.6,
+   "sDone": false,
+   "rDone": false
   }
  ],
- "deals": [],
  "known": [
   {
    "nr": "001",
@@ -31,6 +31,14 @@
    "salt": "9b9116fcdaa6c08897f7f5deafd5184b",
    "hash": "da9e198aeac5cade5cb6229106710840bb518b3108105bbf7c93f5855f9932db",
    "created": 1794914191326
+  }
+ ],
+ "notes": [
+  {
+   "id": "mwklppak7qh7",
+   "userId": "mwklkdsu0qaf",
+   "ts": 1794914439500,
+   "text": "Trade! Deine Karte #045 Katrin Riemer wurde an Felix Korte getradet. Du bekommst: 0,60 €."
   }
  ]
 }
