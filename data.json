@@ -14,20 +14,7 @@
    "bids": []
   }
  ],
- "deals": [
-  {
-   "id": "mwki8yeyezb",
-   "ts": 1794908619322,
-   "nr": "001",
-   "name": "Michael Rembiak",
-   "seller": "Justus Jülkenbeck",
-   "who": "Tobias Dox",
-   "type": "money",
-   "val": 1,
-   "sDone": false,
-   "rDone": false
-  }
- ],
+ "deals": [],
  "known": [
   {
    "nr": "001",
