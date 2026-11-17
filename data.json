@@ -9,7 +9,13 @@
    "mode": "money",
    "wants": [],
    "id": "mwkfiegoyv68",
-   "bids": []
+   "bids": [
+    {
+     "name": "Justus Jülkenbeck",
+     "price": 1,
+     "ts": 1794904042919
+    }
+   ]
   }
  ],
  "deals": [
