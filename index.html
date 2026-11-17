@@ -257,12 +257,28 @@ function renderDeals(){
 }
 function del(id){if(confirm('Eintrag komplett löschen?'))mutate(d=>{d.cards=d.cards.filter(k=>k.id!==id)}).then(()=>closeM())}
 
+const normNr=x=>String(x||'').trim().replace(/^#/,'').replace(/^0+(?=\d)/,'').toLocaleLowerCase('de');
+const normName=x=>String(x||'').trim().toLocaleLowerCase('de');
+function knownList(){
+  const l=[...(db.known||[]),...db.cards.map(c=>({nr:c.nr,name:c.name}))];
+  return l.filter(k=>k.nr&&k.name);
+}
+function fillFromNr(){
+  const v=normNr($('fn').value);if(!v)return;
+  const k=knownList().find(k=>normNr(k.nr)===v);
+  if(k)$('fm').value=k.name;
+}
+function fillFromName(){
+  const v=normName($('fm').value);if(!v)return;
+  const k=knownList().find(k=>normName(k.name)===v);
+  if(k)$('fn').value=k.nr;
+}
 function openForm(id){
   const c=id?find(id):{nr:'',name:'',seller:'',edition:'normal',qty:1,mode:'both',wants:[]};
   const sel=(o,v)=>Object.entries(o).map(([k,t])=>`<option value="${k}"${k===v?' selected':''}>${t}</option>`).join('');
   openM(`<h3>${id?'Eintrag bearbeiten':'Karte eintragen'}</h3>
-  <input id="fn" placeholder="Kartennummer (z. B. 005)" value="${esc(c.nr)}">
-  <input id="fm" placeholder="Kartenname (z. B. Herr Schmidt)" value="${esc(c.name)}">
+  <input id="fn" placeholder="Kartennummer (z. B. 005)" value="${esc(c.nr)}" oninput="fillFromNr()">
+  <input id="fm" placeholder="Kartenname (z. B. Herr Schmidt)" value="${esc(c.name)}" oninput="fillFromName()">
   <input id="fs" placeholder="Verkäufer (nur für dich sichtbar)" value="${esc(c.seller)}">
   <select id="fe">${sel({normal:'Normal (Start 0,60 €)',special:'Special Edition (Start 0,80 €)'},c.edition)}</select>
   <input id="fq" type="number" min="1" value="${c.qty}">
@@ -275,6 +291,10 @@ function save(id){
     qty:Math.max(1,parseInt($('fq').value)||1),mode:$('fo').value,wants:$('fw').value.split(',').map(s=>s.trim()).filter(Boolean)};
   if(!o.nr||!o.name)return alert('Nummer und Name sind Pflicht.');
   mutate(d=>{
+    d.known=d.known||[];
+    const nk=normNr(o.nr);
+    const ex=d.known.find(k=>normNr(k.nr)===nk);
+    if(ex)ex.name=o.name;else d.known.push({nr:o.nr,name:o.name});
     if(id){const x=d.cards.find(k=>k.id===id);Object.assign(x,o)}
     else d.cards.push({...o,id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),bids:[]});
   }).then(ok=>ok&&closeM());
