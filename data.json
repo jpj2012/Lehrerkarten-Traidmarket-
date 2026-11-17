@@ -12,25 +12,6 @@
    "bids": []
   },
   {
-   "nr": "033",
-   "name": "Saskia Busse",
-   "seller": "Tobias Dox",
-   "edition": "special",
-   "qty": 1,
-   "mode": "both",
-   "wants": [
-    "Sebastian Kraft"
-   ],
-   "id": "mwjqq0bdzgz9",
-   "bids": [
-    {
-     "name": "Justus Jülkenbeck",
-     "price": 1,
-     "ts": 1794901883855
-    }
-   ]
-  },
-  {
    "nr": "001",
    "name": "Michael Rembiak",
    "seller": "Justus Jülkenbeck",
@@ -42,7 +23,20 @@
    "bids": []
   }
  ],
- "deals": [],
+ "deals": [
+  {
+   "id": "mwkfgtv6rzt",
+   "ts": 1794903947826,
+   "nr": "033",
+   "name": "Saskia Busse",
+   "seller": "Tobias Dox",
+   "who": "G",
+   "type": "money",
+   "val": 0.8,
+   "sDone": false,
+   "rDone": false
+  }
+ ],
  "known": [
   {
    "nr": "001",
