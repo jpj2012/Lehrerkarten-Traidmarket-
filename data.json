@@ -3,25 +3,6 @@
   {
    "nr": "001",
    "name": "Michael Rembiak",
-   "seller": "Justus Jülkenbeck",
-   "edition": "special",
-   "qty": 1,
-   "mode": "both",
-   "wants": [
-    "Christopher Janus"
-   ],
-   "id": "mwki5y02ht3k",
-   "bids": [
-    {
-     "name": "Tobias Dox",
-     "price": 1,
-     "ts": 1794908584009
-    }
-   ]
-  },
-  {
-   "nr": "001",
-   "name": "Michael Rembiak",
    "seller": "Niko Plester",
    "edition": "normal",
    "qty": 1,
@@ -33,7 +14,20 @@
    "bids": []
   }
  ],
- "deals": [],
+ "deals": [
+  {
+   "id": "mwki8yeyezb",
+   "ts": 1794908619322,
+   "nr": "001",
+   "name": "Michael Rembiak",
+   "seller": "Justus Jülkenbeck",
+   "who": "Tobias Dox",
+   "type": "money",
+   "val": 1,
+   "sDone": false,
+   "rDone": false
+  }
+ ],
  "known": [
   {
    "nr": "001",
