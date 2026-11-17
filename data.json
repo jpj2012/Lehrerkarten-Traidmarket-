@@ -11,7 +11,13 @@
     "Christopher Janus"
    ],
    "id": "mwki5y02ht3k",
-   "bids": []
+   "bids": [
+    {
+     "name": "Tobias Dox",
+     "price": 1,
+     "ts": 1794908584009
+    }
+   ]
   },
   {
    "nr": "001",
