@@ -27,6 +27,7 @@ button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(
 .offer-table th,.offer-table td{padding:8px;border-bottom:1px solid var(--br);text-align:left;vertical-align:top}
 .offer-table th{background:var(--bg);white-space:nowrap}
 .offer-table tr:last-child td{border-bottom:0}
+.offer-table tbody tr{cursor:pointer}.offer-table tbody tr.sel td{background:color-mix(in srgb,var(--ac) 14%,transparent)}.offer-table tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--ac)}
 .offer-actions{display:flex;gap:5px;flex-wrap:wrap}.offer-actions button{padding:5px 8px;font-size:.82rem}
 body.adm{padding-top:46px}.dl{background:var(--card);border:1px solid var(--br);border-radius:10px;padding:10px 12px;margin-bottom:8px}.dl label{display:flex;gap:8px;align-items:center;margin-top:4px}.dl input{width:auto;margin:0}h2.sec{font-size:1.1rem;margin:16px 0 8px}#plus{display:none;width:100%;margin-bottom:10px}
 </style>
@@ -127,6 +128,18 @@ function closeM(){$('ov').style.display='none'}
 const find=id=>db.cards.find(c=>c.id===id);
 const gkey=c=>encodeURIComponent(String(c.name||'').trim().toLocaleLowerCase('de'));
 
+let selId=null;
+function selOffer(id){
+  selId=id;
+  document.querySelectorAll('.offer-table tbody tr').forEach(r=>r.classList.toggle('sel',r.dataset.id===id));
+  const r=document.querySelector('.offer-table tbody tr[data-id="'+id+'"]');
+  const bar=document.getElementById('bidbar');
+  if(bar)bar.style.display=(r&&r.dataset.mode==='cards')?'none':'';
+}
+function bidSel(){
+  if(!selId)return alert('Bitte zuerst ein Angebot in der Tabelle antippen.');
+  bidForm(selId);
+}
 function detailGroup(encodedKey){
   const key=decodeURIComponent(encodedKey);
   const offers=db.cards.filter(c=>String(c.name||'').trim().toLocaleLowerCase('de')===key)
@@ -142,16 +155,16 @@ function detailGroup(encodedKey){
     const start=START[c.edition]??START.normal;
     const hasMoney=c.mode!=='cards',hasSwap=c.mode!=='money';
     const highest=hasMoney&&bids.length?eur(bids[0].price):'—';
-    const wants=hasSwap?((c.wants||[]).length?c.wants.map(esc).join('<br>'):'Keine Angabe'):'—';
+    const wants=(c.wants||[]).length?c.wants.map(esc).join('<br>'):(hasSwap?'Keine Angabe':'—');
     const edition=c.edition==='special'?'Special':'Normal';
     const price=hasMoney?eur(start):'—';
     let action='';
-    if(c.mode==='money'||c.mode==='both')action+=`<button class="p" onclick="bidForm('${c.id}')">Bieten</button>`;
     if(admin)action+=`<button onclick="detail('${c.id}')">Gebote</button> <button onclick="tradeForm('${c.id}',-1)">Trade</button> <button onclick="openForm('${c.id}')">Bearbeiten</button>`;
-    h+=`<tr><td>#${esc(c.nr)}</td><td>${esc(c.name)}</td><td>${edition}</td><td>${price}</td><td>${highest}</td><td>${wants}</td><td><div class="offer-actions">${action}</div></td></tr>`;
+    h+=`<tr data-id="${c.id}" data-mode="${c.mode}" onclick="selOffer('${c.id}')"><td>#${esc(c.nr)}</td><td>${esc(c.name)}</td><td>${edition}</td><td>${price}</td><td>${highest}</td><td>${wants}</td><td><div class="offer-actions" onclick="event.stopPropagation()">${action}</div></td></tr>`;
   }
   h+=`</tbody></table></div>`;
-  h+=`<p><button onclick="closeM()">Schließen</button></p>`;
+  h+=`<p><span id="bidbar"><button class="p" onclick="bidSel()">Bieten</button></span> <button onclick="closeM()">Schließen</button></p>`;
+  selId=null;
   openM(h);
 }
 function detail(id){
