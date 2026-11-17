@@ -29,12 +29,16 @@ button{cursor:pointer}button.p{background:var(--ac);color:#fff;border-color:var(
 .offer-table tr:last-child td{border-bottom:0}
 .offer-table tbody tr{cursor:pointer}.offer-table tbody tr.sel td{background:color-mix(in srgb,var(--ac) 14%,transparent)}.offer-table tbody tr.sel td:first-child{box-shadow:inset 3px 0 0 var(--ac)}
 .offer-actions{display:flex;gap:5px;flex-wrap:wrap}.offer-actions button{padding:5px 8px;font-size:.82rem}
+#ub{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:.9rem}
+.note{background:var(--ok);color:#fff;border-radius:10px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;justify-content:space-between;align-items:center}.note button{color:#fff;background:transparent;border-color:#fff;padding:2px 10px}
 body.adm{padding-top:46px}.dl{background:var(--card);border:1px solid var(--br);border-radius:10px;padding:10px 12px;margin-bottom:8px}.dl label{display:flex;gap:8px;align-items:center;margin-top:4px}.dl input{width:auto;margin:0}h2.sec{font-size:1.1rem;margin:16px 0 8px}#plus{display:none;width:100%;margin-bottom:10px}
 </style>
 </head>
 <body>
-<div id="bar"><span>Admin: <button onclick="setView('cards')">Karten</button> <button onclick="setView('deals')">Übergaben</button></span><button onclick="logout()">Beenden</button></div>
+<div id="bar"><span>Admin: <button onclick="setView('cards')">Karten</button> <button onclick="setView('deals')">Übergaben</button> <button onclick="setView('accounts')">Konten</button></span><button onclick="logout()">Beenden</button></div>
 <h1>🃏 Lehrerkarten Tauschbörse</h1>
+<div id="ub"></div>
+<div id="nt"></div>
 <button id="plus" class="p" onclick="openForm()">＋ Karte eintragen</button>
 <div id="sf">
 <input id="qn" placeholder="Suche nach Kartennummer (z. B. 005)" oninput="render()">
@@ -50,7 +54,9 @@ const CFG={owner:'jpj2012',repo:'Lehrerkarten-Traidmarket-',branch:'main',file:'
 const CODE='ghg787tjc1215';
 const START={normal:0.60,special:0.80};
 const MODE={money:'Nur Geld',cards:'Nur Tausch',both:'Geld oder Tausch'};
-let db={cards:[]},admin=false,view='cards';
+let db={cards:[]},admin=false,view='cards',loaded=false,formOwner='';
+let me=null;try{me=JSON.parse(localStorage.getItem('lk_me')||'null')}catch(e){}
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const eur=n=>Number(n).toFixed(2).replace('.',',')+' €';
@@ -73,7 +79,7 @@ async function load(){
     if(remote())db=(await fetchRemote()).data;
     else db=JSON.parse(localStorage.getItem('lk_db')||'{"cards":[]}');
   }catch(e){$('list').innerHTML='<p class="mut">Konnte Daten nicht laden: '+esc(e.message)+'</p>';return}
-  render();
+  loaded=true;render();
 }
 async function mutate(fn,tries=2){
   try{
@@ -100,8 +106,12 @@ function cardGroups(cards){
   return [...groups.entries()].map(([key,offers])=>({key,offers}));
 }
 function render(){
-  const dv=admin&&view==='deals';$('sf').style.display=dv?'none':'';$('plus').style.display=(admin&&!dv)?'block':'none';
-  if(dv)return renderDeals();
+  renderUser();
+  const sp=admin&&(view==='deals'||view==='accounts'||view.startsWith('acc:'));
+  $('sf').style.display=sp?'none':'';$('plus').style.display=(admin&&!sp)?'block':'none';
+  if(admin&&view==='deals')return renderDeals();
+  if(admin&&view==='accounts')return renderAccounts();
+  if(admin&&view.startsWith('acc:'))return renderAccount(view.slice(4));
   const n=$('qn').value.trim().toLowerCase(),m=$('qm').value.trim().toLowerCase(),w=$('qw').value.trim().toLowerCase();
   const filtered=db.cards.filter(c=>(!n||String(c.nr).toLowerCase().includes(n))
     &&(!m||String(c.name).toLowerCase().includes(m))
@@ -232,6 +242,8 @@ function doTrade(id,i){
   mutate(d=>{
     const x=d.cards.find(k=>k.id===id);if(!x)return;
     (d.deals=d.deals||[]).push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,5),ts:Date.now(),nr:x.nr,name:x.name,seller:x.seller||'(unbekannt)',who,type,val,sDone:false,rDone:false});
+    const ownerId=x.ownerId||((d.users||[]).find(u=>normName(u.name)===normName(x.seller))||{}).id;
+    if(ownerId)(d.notes=d.notes||[]).push({id:uid(),userId:ownerId,ts:Date.now(),text:`Trade! Deine Karte #${x.nr} ${x.name} wurde an ${who} getradet. Du bekommst: ${type==='money'?eur(val):'Karte '+val}.`});
     if(i>=0&&x.bids)x.bids.splice(i,1);
     x.qty--;if(x.qty<=0)d.cards=d.cards.filter(k=>k.id!==id);
   }).then(ok=>ok&&closeM());
@@ -273,13 +285,16 @@ function fillFromName(){
   const k=knownList().find(k=>normName(k.name)===v);
   if(k)$('fn').value=k.nr;
 }
-function openForm(id){
+function openForm(id,ownerId){
   const c=id?find(id):{nr:'',name:'',seller:'',edition:'normal',qty:1,mode:'both',wants:[]};
+  formOwner=id?(c.ownerId||''):(ownerId||'');
+  const ou=formOwner?(db.users||[]).find(u=>u.id===formOwner):null;
+  if(ou)c.seller=ou.name;
   const sel=(o,v)=>Object.entries(o).map(([k,t])=>`<option value="${k}"${k===v?' selected':''}>${t}</option>`).join('');
   openM(`<h3>${id?'Eintrag bearbeiten':'Karte eintragen'}</h3>
   <input id="fn" placeholder="Kartennummer (z. B. 005)" value="${esc(c.nr)}" oninput="fillFromNr()">
   <input id="fm" placeholder="Kartenname (z. B. Herr Schmidt)" value="${esc(c.name)}" oninput="fillFromName()">
-  <input id="fs" placeholder="Verkäufer (nur für dich sichtbar)" value="${esc(c.seller)}">
+  <input id="fs" placeholder="Verkäufer (nur für dich sichtbar)" value="${esc(c.seller)}"${ou?' readonly':''}>
   <select id="fe">${sel({normal:'Normal (Start 0,60 €)',special:'Special Edition (Start 0,80 €)'},c.edition)}</select>
   <input id="fq" type="number" min="1" value="${c.qty}">
   <select id="fo">${sel(MODE,c.mode)}</select>
@@ -289,6 +304,7 @@ function openForm(id){
 function save(id){
   const o={nr:$('fn').value.trim(),name:$('fm').value.trim(),seller:$('fs').value.trim(),edition:$('fe').value,
     qty:Math.max(1,parseInt($('fq').value)||1),mode:$('fo').value,wants:$('fw').value.split(',').map(s=>s.trim()).filter(Boolean)};
+  if(formOwner)o.ownerId=formOwner;
   if(!o.nr||!o.name)return alert('Nummer und Name sind Pflicht.');
   mutate(d=>{
     d.known=d.known||[];
@@ -300,6 +316,89 @@ function save(id){
   }).then(ok=>ok&&closeM());
 }
 
+
+// ===== Konten =====
+const hex=b=>[...b].map(x=>x.toString(16).padStart(2,'0')).join('');
+const unhex=h=>Uint8Array.from(h.match(/../g)||[],x=>parseInt(x,16));
+async function hashPw(pw,salt){
+  if(!(window.crypto&&crypto.subtle))throw new Error('Dieser Browser unterstützt keine sichere Passwortprüfung (https nötig).');
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  const b=await crypto.subtle.deriveBits({name:'PBKDF2',salt:unhex(salt),iterations:100000,hash:'SHA-256'},k,256);
+  return hex(new Uint8Array(b));
+}
+function renderUser(){
+  if(me&&loaded&&!(db.users||[]).some(u=>u.id===me.id)){me=null;localStorage.removeItem('lk_me')}
+  $('ub').innerHTML=me?`<span>Angemeldet als <b>${esc(me.name)}</b></span> <button onclick="logoutUser()">Abmelden</button>`
+    :`<button onclick="loginForm()">Anmelden</button> <button onclick="registerForm()">Konto erstellen</button>`;
+  let seen=[];try{seen=JSON.parse(localStorage.getItem('lk_seen')||'[]')}catch(e){}
+  const ns=me?(db.notes||[]).filter(n=>n.userId===me.id&&!seen.includes(n.id)):[];
+  $('nt').innerHTML=ns.map(n=>`<div class="note"><span>🔔 ${esc(n.text)}</span><button onclick="dismissNote('${n.id}')">OK</button></div>`).join('');
+}
+function dismissNote(id){
+  let seen=[];try{seen=JSON.parse(localStorage.getItem('lk_seen')||'[]')}catch(e){}
+  seen.push(id);localStorage.setItem('lk_seen',JSON.stringify(seen.slice(-200)));renderUser();
+}
+function registerForm(){
+  openM(`<h3>Konto erstellen</h3>
+  <input id="ru" placeholder="Benutzername" autocomplete="username" maxlength="24">
+  <input id="rp" type="password" placeholder="Passwort (mind. 6 Zeichen)" autocomplete="new-password">
+  <input id="rp2" type="password" placeholder="Passwort wiederholen" autocomplete="new-password">
+  <p class="mut">Nutze hier kein Passwort, das du auch woanders verwendest.</p>
+  <button class="p" onclick="doRegister()">Konto erstellen</button> <button onclick="closeM()">Abbrechen</button>`);
+}
+async function doRegister(){
+  const name=$('ru').value.trim(),p=$('rp').value,p2=$('rp2').value;
+  if(name.length<3||name.length>24)return alert('Der Benutzername muss 3 bis 24 Zeichen lang sein.');
+  if(p.length<6)return alert('Das Passwort muss mindestens 6 Zeichen lang sein.');
+  if(p!==p2)return alert('Die Passwörter stimmen nicht überein.');
+  let salt,hash;
+  try{salt=hex(crypto.getRandomValues(new Uint8Array(16)));hash=await hashPw(p,salt)}catch(e){return alert(e.message)}
+  const user={id:uid(),name,salt,hash,created:Date.now()};
+  const ok=await mutate(d=>{
+    d.users=d.users||[];
+    if(d.users.some(u=>normName(u.name)===normName(name)))throw new Error('Dieser Benutzername ist schon vergeben.');
+    d.users.push(user);
+  });
+  if(ok){me={id:user.id,name:user.name};localStorage.setItem('lk_me',JSON.stringify(me));closeM();render()}
+}
+function loginForm(){
+  openM(`<h3>Anmelden</h3>
+  <input id="lu" placeholder="Benutzername" autocomplete="username">
+  <input id="lp" type="password" placeholder="Passwort" autocomplete="current-password">
+  <button class="p" onclick="doLoginUser()">Anmelden</button> <button onclick="closeM()">Abbrechen</button>`);
+}
+async function doLoginUser(){
+  const n=$('lu').value.trim(),p=$('lp').value;
+  if(!n||!p)return alert('Bitte Benutzername und Passwort eingeben.');
+  await load();
+  const u=(db.users||[]).find(x=>normName(x.name)===normName(n));
+  let okPw=false;
+  try{okPw=!!u&&(await hashPw(p,u.salt))===u.hash}catch(e){return alert(e.message)}
+  if(!okPw)return alert('Benutzername oder Passwort ist falsch.');
+  me={id:u.id,name:u.name};localStorage.setItem('lk_me',JSON.stringify(me));closeM();render();
+}
+function logoutUser(){me=null;localStorage.removeItem('lk_me');render()}
+function renderAccounts(){
+  const us=(db.users||[]).slice().sort((a,b)=>a.name.localeCompare(b.name,'de'));
+  $('list').innerHTML='<h2 class="sec">Konten</h2>'+(us.length?us.map(u=>{
+    const n=db.cards.filter(c=>c.ownerId===u.id).length;
+    return `<div class="row" onclick="setView('acc:${u.id}')"><span class="nm"><b>${esc(u.name)}</b></span><span class="tag">${n} Karte${n===1?'':'n'}</span></div>`;
+  }).join(''):'<p class="mut">Noch keine Konten.</p>');
+}
+function renderAccount(id){
+  const u=(db.users||[]).find(x=>x.id===id);
+  if(!u){view='accounts';return renderAccounts()}
+  const cs=db.cards.filter(c=>c.ownerId===id).sort((a,b)=>(parseInt(a.nr,10)||1e9)-(parseInt(b.nr,10)||1e9));
+  $('list').innerHTML=`<p><button onclick="setView('accounts')">← Alle Konten</button></p>
+  <h2 class="sec">${esc(u.name)}</h2>
+  <p><button class="p" onclick="openForm(null,'${id}')">＋ Karte für ${esc(u.name)} eintragen</button> <button onclick="delUser('${id}')">Konto löschen</button></p>`
+  +(cs.length?cs.map(c=>`<div class="row" onclick="detail('${c.id}')"><span class="nr">#${esc(c.nr)}</span><span class="nm"><b>${esc(c.name)}</b></span><span class="tag${c.edition==='special'?' s':''}">${c.edition==='special'?'Special':'Normal'}</span><span class="tag">×${Number(c.qty)||0}</span><span class="tag">${MODE[c.mode]||''}</span></div>`).join(''):'<p class="mut">Noch keine Karten in diesem Konto.</p>');
+}
+function delUser(id){
+  if(!confirm('Konto wirklich löschen? Die Karten bleiben bestehen.'))return;
+  mutate(d=>{d.users=(d.users||[]).filter(u=>u.id!==id);d.notes=(d.notes||[]).filter(n=>n.userId!==id)}).then(ok=>{if(ok)setView('accounts')});
+}
+setInterval(()=>{if(me&&!admin&&$('ov').style.display!=='flex')load()},60000);
 function login(){
   if(admin)return;
   if(prompt('Code:')!==CODE)return;
