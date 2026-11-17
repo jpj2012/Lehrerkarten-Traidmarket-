@@ -1,17 +1,5 @@
 {
- "cards": [
-  {
-   "nr": "001",
-   "name": "Michael Rembiak",
-   "seller": "Justus Jülkenbeck",
-   "edition": "normal",
-   "qty": 1,
-   "mode": "money",
-   "wants": [],
-   "id": "mwkfg8dp63e3",
-   "bids": []
-  }
- ],
+ "cards": [],
  "deals": [
   {
    "id": "mwkfgtv6rzt",
